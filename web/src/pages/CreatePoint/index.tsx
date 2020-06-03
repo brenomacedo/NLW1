@@ -1,11 +1,27 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from '../../assets/logo.svg'
 import { Link } from 'react-router-dom'
 import { FiArrowLeft } from 'react-icons/fi'
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet'
+import api from '../../services/api'
 import './styles.css'
 
 const CreatePoint = () => {
+
+    interface IItems {
+        id: number
+        title: string
+        image_url: string
+    }
+
+    const [items, setItems] = useState<IItems[]>([])
+
+    useEffect(() => {
+        api.get('items').then(resp => {
+            setItems(resp.data)
+        })
+    }, [])
+
     return (
         <div id="page-create-point">
             <header>
@@ -65,7 +81,7 @@ const CreatePoint = () => {
                         <div className="field">
                             <label htmlFor="city">Cidade</label>
                             <select name="city" id="city">
-                                <option unselectable="on" selected value="0">Selecione uma cidade</option>
+                                <option value="0">Selecione uma cidade</option>
                             </select>
                         </div>
                     </div>
@@ -78,30 +94,12 @@ const CreatePoint = () => {
                     </legend>
 
                     <ul className="items-grid">
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
-                        <li>
-                            <img src="http://localhost:3333/uploads/oleo.svg" alt="teste"/>
-                            <span>Óleo de cozinha</span>
-                        </li>
+                        {items.map(item => (
+                            <li key={item.id}>
+                                <img src={item.image_url} alt={item.title}/>
+                                <span>{item.title}</span>
+                            </li>
+                        ))}
                     </ul>
                 </fieldset>
 
