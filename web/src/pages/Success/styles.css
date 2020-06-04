@@ -1,0 +1,20 @@
+.success-content {
+    min-height: 100vh;
+    height: auto;
+    background-color: #1c1c1c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.success-content h3 {
+    font-size: 30px;
+    margin: 20px;
+    color: white;
+    text-align: center;
+}
+
+.success-icon {
+    cursor: pointer;
+}

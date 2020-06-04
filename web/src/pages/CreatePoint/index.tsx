@@ -123,7 +123,7 @@ const CreatePoint = () => {
 
         api.post('points', data)
 
-        history.push('/')
+        history.push('/success')
     }
 
     return (
