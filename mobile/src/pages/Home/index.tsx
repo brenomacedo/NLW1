@@ -1,14 +1,54 @@
-import React from 'react'
-import { ImageBackground, View, StyleSheet, Image, Text } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { ImageBackground, View, StyleSheet, Image, Text, Alert } from 'react-native'
 import { RectButton } from 'react-native-gesture-handler'
 import { Feather as Icon } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import Picker from 'react-native-picker-select'
+import axios from 'axios'
+
+
 const Home = () => {
+
+  interface IUFs {
+    sigla: string
+  }
+
+  interface ICities {
+    nome: string
+  }
+
+  useEffect(() => {
+    axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados').then(resp => {
+      setUfs(resp.data)
+    })
+  }, [])
+
+  const [ufs, setUfs] = useState<IUFs[]>([])
+  const [selectedUf, setSelectedUf] = useState('0')
+
+  const [cities, setCities] = useState<ICities[]>([])
+  const [selectedCity, setSelectedCity] = useState('0')
 
   const navigation = useNavigation()
 
   const handleNavigationToPoints = () => {
-    navigation.navigate('Points')
+    if(selectedCity === '0' || selectedUf === '0') {
+      Alert.alert('Selecione Sua Cidade e Seu Estado!')
+      return
+    }
+
+    navigation.navigate('Points', {
+      city: selectedCity,
+      uf: selectedUf
+    })
+  }
+
+  const handleStateChange = (event: any) => {
+    setSelectedUf(event)
+    axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${event}/municipios`)
+      .then(resp => {
+        setCities(resp.data)
+      }).catch(err => {})
   }
 
   return (
@@ -21,6 +61,16 @@ const Home = () => {
       </View>
 
       <View style={styles.footer}>
+
+        <Picker value={selectedUf} placeholder={{ label: 'Selecione seu Estado', value: '0' }}
+        items={ufs.map(uf => ({ label: uf.sigla, value: uf.sigla }))}
+        onValueChange={handleStateChange} />
+
+        <Picker value={selectedCity} disabled={selectedUf !== '0' ? false : true}
+        placeholder={{ label: 'Selecione sua Cidade', value: '0' }}
+        items={cities.map(city => ({ label: city.nome, value: city.nome }))}
+        onValueChange={(city) => setSelectedCity(city)} />
+
         <RectButton style={styles.button} onPress={handleNavigationToPoints}>
           <View style={styles.buttonIcon}>
             <Text>
