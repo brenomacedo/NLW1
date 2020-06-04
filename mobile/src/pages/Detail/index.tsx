@@ -1,16 +1,50 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native'
 import Constants from 'expo-constants'
 import { Feather as Icon, FontAwesome as FAIcon } from '@expo/vector-icons'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { RectButton } from 'react-native-gesture-handler'
+import api from '../../services'
 
 const Detail = () => {
 
+  interface IParams {
+    pointId: number
+  }
+
+  interface IData {
+    point: {
+      image: string
+      name: string
+      email: string
+      whatsapp: string
+      city: string
+      uf: string
+    },
+    items: {
+      title: string
+    }[]
+  }
+
+  const [data, setData] = useState<IData>({} as IData)
+
   const navigation = useNavigation()
+  const route = useRoute()
+
+  const routeParmas = route.params as IParams
+
+  useEffect(() => {
+    api.get(`points/${routeParmas.pointId}`).then(resp => {
+      setData(resp.data)
+    }).catch(err => {})
+  }, [])
 
   const handleNavigateBack = () => {
     navigation.goBack()
+  }
+
+  if(!data.point) {
+    return null
   }
 
   return (
@@ -24,12 +58,12 @@ const Detail = () => {
           uri: 'https://images.unsplash.com/photo-1560543899-58ce3bc3c8fc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80'
         }} />
 
-        <Text style={styles.pointName} >Mercado do joao</Text>
-        <Text style={styles.pointItems} >Lampadas, Oleo de Cozinha</Text>
+        <Text style={styles.pointName} >{data.point.name}</Text>
+        <Text style={styles.pointItems} >{data.items.map(item => item.title).join(', ')}</Text>
 
         <View style={styles.address}>
-          <Text style={styles.addressTitle}>Endereço</Text>
-          <Text style={styles.addressContent}>Rio do Sul - SC</Text>
+          <Text style={styles.addressTitle}>{data.point.city}</Text>
+          <Text style={styles.addressContent}>{data.point.uf}</Text>
         </View>
       </View>
       <View style={styles.footer}>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native'
 import Constants from 'expo-constants'
 import { Feather as Icon } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import MapView, { Marker } from 'react-native-maps'
 import { SvgUri } from 'react-native-svg'
+import * as Location from 'expo-location'
 import api from '../../services'
 
 const Points = () => {
@@ -15,9 +16,37 @@ const Points = () => {
     image_url: string
   }
 
+  interface IPoints {
+    id: number
+    image: string
+    name: string
+    latitude: number
+    longitude: number
+  }
+
   const [items, setItems] = useState<IItems[]>([])
+  const [initialPosition, setInitialPosition] = useState<[number, number]>([0,0])
   const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [points, setPoints] = useState<IPoints[]>([])
+
   const navigation = useNavigation()
+
+  useEffect(() => {
+    async function loadPosition() {
+      const {status} = await Location.requestPermissionsAsync()
+
+      if(status !== 'granted') {
+        Alert.alert('OPS!', 'Precisamos de sua permissão para obter a localização')
+        return
+      }
+
+      const location = await Location.getCurrentPositionAsync()
+      const { latitude, longitude } = location.coords
+      setInitialPosition([latitude, longitude])
+    }
+
+    loadPosition()
+  }, [])
 
   useEffect(() => {
     api.get('items').then(res => {
@@ -25,12 +54,26 @@ const Points = () => {
     }).catch(err => {console.log(err)})
   }, [])
 
+  useEffect(() => {
+    api.get('points', {
+      params: {
+        city: 'Fortaleza',
+        uf: 'CE',
+        items: [1,2]
+      }
+    }).then(resp => {
+      setPoints(resp.data)
+    }).catch(err => {
+
+    })
+  }, [])
+
   const handleNavigateBack = () => {
     navigation.goBack()
   }
 
-  const handleNavigateToDetail = () => {
-    navigation.navigate('Detail')
+  const handleNavigateToDetail = (id: number) => {
+    navigation.navigate('Detail', { pointId: id })
   }
 
   const handleSelectItem = (id: number) => {
@@ -57,17 +100,21 @@ const Points = () => {
         </Text>
 
         <View style={styles.mapContainer}>
-          <MapView initialRegion={{ latitude: -3.7901373, longitude: -38.5189372,
-          longitudeDelta: 0.014, latitudeDelta: 0.014 }} style={styles.map} >
-            <Marker onPress={handleNavigateToDetail} style={styles.mapMarker} coordinate={{
-              latitude: -3.7901373, longitude: -38.5189372
-            }}>
-              <View style={styles.mapMarkerContainer}>
-                <Image style={styles.mapMarkerImage} source={{ uri: 'https://images.unsplash.com/photo-1560543899-58ce3bc3c8fc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80' }} />
-                <Text style={styles.mapMarkerTitle} >Mercado</Text>
-              </View>
-            </Marker>
-          </MapView>
+          {initialPosition[0] !== 0 && (
+            <MapView initialRegion={{ latitude: initialPosition[0], longitude: initialPosition[1],
+              longitudeDelta: 0.014, latitudeDelta: 0.014 }} style={styles.map} >
+                {points.map(point => (
+                  <Marker key={String(point.id)} onPress={() => handleNavigateToDetail(point.id)} style={styles.mapMarker} coordinate={{
+                    latitude: point.latitude, longitude: point.longitude
+                  }}>
+                    <View style={styles.mapMarkerContainer}>
+                      <Image style={styles.mapMarkerImage} source={{ uri: point.image }} />
+                      <Text style={styles.mapMarkerTitle} >{point.name}</Text>
+                    </View>
+                  </Marker>
+                ))}
+              </MapView>
+          )}
         </View>
       </View>
       <View style={styles.itemsContainer}>
