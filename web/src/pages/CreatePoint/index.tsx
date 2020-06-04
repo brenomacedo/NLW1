@@ -1,8 +1,9 @@
-import React, { useEffect, useState, ChangeEvent } from 'react'
+import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react'
 import logo from '../../assets/logo.svg'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { FiArrowLeft } from 'react-icons/fi'
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet'
+import { LeafletMouseEvent } from 'leaflet'
 import axios from 'axios'
 import api from '../../services/api'
 import './styles.css'
@@ -23,11 +24,28 @@ const CreatePoint = () => {
         nome: string
     }
 
+    interface IForm {
+        name: string
+        email: string
+        whatsapp: string
+    }
+
+    const history = useHistory()
+
     const [items, setItems] = useState<IItems[]>([])
     const [ufs, setUfs] = useState<string[]>([])
     const [selectedUf, setSelectedUf] = useState('0')
     const [cities, setCities] = useState<string[]>([])
     const [selectedCity, setSelectedCity] = useState('0')
+    const [selectPosition, setSelectedPosition] = useState<[number, number]>([0,0])
+    const [userPosition, setUserPosition] = useState<[number, number]>([0,0])
+    const [selectedItems, setSelectedItems] = useState<number[]>([])
+
+    const [formData, setFormData] = useState<IForm>({
+        name: '',
+        email: '',
+        whatsapp: ''
+    })
 
     useEffect(() => {
         api.get('items').then(resp => {
@@ -56,6 +74,12 @@ const CreatePoint = () => {
 
     }, [selectedUf])
 
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition((position) => {
+            setUserPosition([position.coords.latitude, position.coords.longitude])
+        })
+    }, [])
+
     const handleSelectUf = (event: ChangeEvent<HTMLSelectElement>) => {
         const uf = event.target.value
 
@@ -68,6 +92,40 @@ const CreatePoint = () => {
         setSelectedCity(city)
     }
 
+    const handleMapClick = (event: LeafletMouseEvent) => {
+        setSelectedPosition([event.latlng.lat, event.latlng.lng])
+    }
+
+    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setFormData({...formData, [event.target.name]: event.target.value})
+    }
+
+    const handleSelectItem = (id: number) => {
+        const alreadySelected  = selectedItems.findIndex(item =>  item === id)
+        if(alreadySelected >= 0) {
+            const filteredItems = selectedItems.filter(item => item !== id)
+            setSelectedItems(filteredItems)
+        } else {
+            setSelectedItems([...selectedItems, id])
+        }
+    }
+
+    const handleSubmit = async (event: FormEvent) => {
+        event.preventDefault()
+
+        const { name, email, whatsapp } = formData
+        const uf = selectedUf
+        const city = selectedCity
+        const [latitude, longitude] = selectPosition
+        const items = selectedItems
+
+        const data = { name, email, whatsapp, uf, city, latitude, longitude, items }
+
+        api.post('points', data)
+
+        history.push('/')
+    }
+
     return (
         <div id="page-create-point">
             <header>
@@ -75,7 +133,7 @@ const CreatePoint = () => {
                 <Link to="/"><FiArrowLeft />Voltar Para Home</Link>
             </header>
 
-            <form>
+            <form onSubmit={handleSubmit}>
                 <h1>Cadastro do ponto <br /> de coleta.</h1>
 
                 <fieldset>
@@ -85,18 +143,18 @@ const CreatePoint = () => {
 
                     <div className="field">
                         <label htmlFor="name">Nome da entidade</label>
-                        <input type="text" name="name" id="id"/>
+                        <input type="text" name="name" id="id" onChange={handleInputChange}/>
                     </div>
                     
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="name">Email</label>
-                            <input type="email" name="email" id="email"/>
+                            <input type="email" name="email" id="email" onChange={handleInputChange}/>
                         </div>
 
                         <div className="field">
                             <label htmlFor="name">Whatsapp</label>
-                            <input type="text" name="whatsapp" id="whatsapp"/>
+                            <input type="text" name="whatsapp" id="whatsapp" onChange={handleInputChange}/>
                         </div>
                     </div>
                 </fieldset>
@@ -107,13 +165,13 @@ const CreatePoint = () => {
                         <span>Selecione o endereço no mapa</span>
                     </legend>
 
-                    <Map zoom={15} center={[ -3.7901373, -38.5189372 ]}>
+                    <Map zoom={15} center={userPosition} onClick={handleMapClick}>
                         <TileLayer
                             attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
 
-                        <Marker position={[ -3.7901373, -38.5189372 ]} />
+                        <Marker position={selectPosition} />
                     </Map>
 
                     <div className="field-group">
@@ -147,7 +205,7 @@ const CreatePoint = () => {
 
                     <ul className="items-grid">
                         {items.map(item => (
-                            <li key={item.id}>
+                            <li className={selectedItems.includes(item.id) ? 'selected' : ''} key={item.id} onClick={() => handleSelectItem(item.id)}>
                                 <img src={item.image_url} alt={item.title}/>
                                 <span>{item.title}</span>
                             </li>
