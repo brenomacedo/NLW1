@@ -1,14 +1,29 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native'
 import Constants from 'expo-constants'
 import { Feather as Icon } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import MapView, { Marker } from 'react-native-maps'
 import { SvgUri } from 'react-native-svg'
+import api from '../../services'
 
 const Points = () => {
 
+  interface IItems {
+    id: number
+    title: string
+    image_url: string
+  }
+
+  const [items, setItems] = useState<IItems[]>([])
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
   const navigation = useNavigation()
+
+  useEffect(() => {
+    api.get('items').then(res => {
+      setItems(res.data)
+    }).catch(err => {console.log(err)})
+  }, [])
 
   const handleNavigateBack = () => {
     navigation.goBack()
@@ -16,6 +31,16 @@ const Points = () => {
 
   const handleNavigateToDetail = () => {
     navigation.navigate('Detail')
+  }
+
+  const handleSelectItem = (id: number) => {
+    const alreadySelected  = selectedItems.findIndex(item =>  item === id)
+    if(alreadySelected >= 0) {
+        const filteredItems = selectedItems.filter(item => item !== id)
+        setSelectedItems(filteredItems)
+    } else {
+        setSelectedItems([...selectedItems, id])
+    }
   }
 
   return (
@@ -47,30 +72,16 @@ const Points = () => {
       </View>
       <View style={styles.itemsContainer}>
         <ScrollView showsHorizontalScrollIndicator={false} horizontal>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.item}>
-            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
-            <Text style={styles.itemTitle}>Lâmpadas</Text>
-          </TouchableOpacity>
+          {items.map(item => {
+            const uri = 'http://10.0.0.106:'+item.image_url.split(':')[2]
+            return (
+              <TouchableOpacity onPress={() => handleSelectItem(item.id)} activeOpacity={0.7} key={String(item.id)} style={[styles.item, selectedItems.includes(item.id) ? styles.selectedItem : []]}>
+                <SvgUri width={42} height={42} uri={uri} />
+                <Text style={styles.itemTitle}>{item.title}</Text>
+              </TouchableOpacity>
+            )
+          })}
+
         </ScrollView>
       </View>
     </>
