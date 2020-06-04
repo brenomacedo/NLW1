@@ -1,8 +1,80 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native'
+import Constants from 'expo-constants'
+import { Feather as Icon } from '@expo/vector-icons'
+import { useNavigation } from '@react-navigation/native'
+import MapView, { Marker } from 'react-native-maps'
+import { SvgUri } from 'react-native-svg'
 
 const Points = () => {
-  return <View />
+
+  const navigation = useNavigation()
+
+  const handleNavigateBack = () => {
+    navigation.goBack()
+  }
+
+  const handleNavigateToDetail = () => {
+    navigation.navigate('Detail')
+  }
+
+  return (
+    <>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={handleNavigateBack}>
+          <Icon name='arrow-left' color='#34cb79' size={20} />
+        </TouchableOpacity>
+        <Text style={styles.title}>
+          Bem Vindo
+        </Text>
+        <Text style={styles.description}>
+          Encontre no mapa um ponto de coleta
+        </Text>
+
+        <View style={styles.mapContainer}>
+          <MapView initialRegion={{ latitude: -3.7901373, longitude: -38.5189372,
+          longitudeDelta: 0.014, latitudeDelta: 0.014 }} style={styles.map} >
+            <Marker onPress={handleNavigateToDetail} style={styles.mapMarker} coordinate={{
+              latitude: -3.7901373, longitude: -38.5189372
+            }}>
+              <View style={styles.mapMarkerContainer}>
+                <Image style={styles.mapMarkerImage} source={{ uri: 'https://images.unsplash.com/photo-1560543899-58ce3bc3c8fc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80' }} />
+                <Text style={styles.mapMarkerTitle} >Mercado</Text>
+              </View>
+            </Marker>
+          </MapView>
+        </View>
+      </View>
+      <View style={styles.itemsContainer}>
+        <ScrollView showsHorizontalScrollIndicator={false} horizontal>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {}} style={styles.item}>
+            <SvgUri width={42} height={42} uri='https://image.flaticon.com/icons/svg/892/892894.svg' />
+            <Text style={styles.itemTitle}>Lâmpadas</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </>
+  )
 }
 
 export default Points
@@ -11,7 +83,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 32,
-    /*paddingTop: 20 + Constants.statusBarHeight,*/
+    paddingTop: 20 + Constants.statusBarHeight,
   },
 
   title: {
