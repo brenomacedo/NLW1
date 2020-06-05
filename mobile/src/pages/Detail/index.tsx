@@ -16,6 +16,7 @@ const Detail = () => {
   interface IData {
     point: {
       image: string
+      image_url: string
       name: string
       email: string
       whatsapp: string
@@ -67,7 +68,7 @@ const Detail = () => {
         </TouchableOpacity>
 
         <Image style={styles.pointImage} source={{
-          uri: 'https://images.unsplash.com/photo-1560543899-58ce3bc3c8fc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80'
+          uri: data.point.image_url
         }} />
 
         <Text style={styles.pointName} >{data.point.name}</Text>
